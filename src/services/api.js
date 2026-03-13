@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
+console.log('🔗 API Base URL:', API_BASE_URL);
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000, // 15 second timeout
@@ -18,19 +20,27 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Log request for debugging
+  console.log(`🚀 API Request: ${config.method?.toUpperCase()} ${config.url}`);
+  
   return config;
 });
 
 // Handle response errors
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`✅ API Response: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`);
+    return response;
+  },
   (error) => {
-    console.error('API Error Details:', {
+    console.error('❌ API Error Details:', {
       message: error.message,
       code: error.code,
       status: error.response?.status,
       url: error.config?.url,
-      baseURL: error.config?.baseURL
+      baseURL: error.config?.baseURL,
+      method: error.config?.method?.toUpperCase()
     });
     
     // Network connection errors
@@ -41,7 +51,7 @@ api.interceptors.response.use(
         error.message.includes('CORS') ||
         !error.response) {
       
-      console.error('Network connection failed. Backend may not be running on:', API_BASE_URL);
+      console.error('🔥 Network connection failed. Backend may not be running on:', API_BASE_URL);
       
       // More specific CORS error message
       if (error.message.includes('CORS') || error.code === 'ERR_NETWORK') {

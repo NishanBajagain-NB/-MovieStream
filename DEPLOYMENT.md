@@ -1,86 +1,266 @@
-# Vercel Deployment Guide
+# 🚀 Complete Production Deployment Guide
 
-## Quick Deploy
+## Overview
+This guide covers deploying the MovieStream application with:
+- **Backend**: Ubuntu VM (172.237.44.29:5000)
+- **Frontend**: Vercel
+- **Database**: Aiven MySQL (already configured)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/NishanBajagain-NB/-MovieStream)
+## 🖥️ Backend Deployment (Ubuntu VM)
 
-## Manual Deployment
+### Step 1: Upload Backend to VM
 
-### 1. Vercel Configuration
+```bash
+# On your local machine, create a deployment package
+cd movie-streaming-app
+tar -czf backend.tar.gz backend/
 
-The project is already configured for Vercel deployment with:
+# Upload to VM (replace with your method)
+scp backend.tar.gz root@172.237.44.29:~/
+```
 
-- **Build Command**: `npm run build`
-- **Output Directory**: `dist`
-- **Install Command**: `npm install`
-- **Framework Preset**: Vite
+### Step 2: Deploy on VM
 
-### 2. Environment Variables
+```bash
+# SSH into VM
+ssh root@172.237.44.29
 
-In your Vercel dashboard, add these environment variables:
+# Extract and setup
+cd ~
+tar -xzf backend.tar.gz
+cd backend
+
+# Make deploy script executable and run
+chmod +x deploy-vm.sh
+./deploy-vm.sh
+```
+
+The script will:
+- ✅ Install Node.js and dependencies
+- ✅ Configure firewall (port 5000)
+- ✅ Test server functionality
+- ✅ Setup PM2 for process management
+- ✅ Configure auto-startup
+- ✅ Test external access
+
+### Step 3: Verify Backend
+
+```bash
+# Test locally on VM
+curl http://localhost:5000/health
+
+# Test externally
+curl http://172.237.44.29:5000/health
+```
+
+Expected response:
+```json
+{
+  "status": "OK",
+  "message": "MovieStream API Server is running",
+  "environment": "production",
+  "timestamp": "2024-03-13T..."
+}
+```
+
+## 🌐 Frontend Deployment (Vercel)
+
+### Step 1: Environment Variables
+
+In Vercel dashboard, add these environment variables:
 
 ```
 VITE_API_BASE_URL=http://172.237.44.29:5000/api
 VITE_TMDB_API_KEY=d976eef58afb6f80e41aff9983a59683
 ```
 
-### 3. Deploy Steps
+### Step 2: Deploy to Vercel
 
-1. **Connect Repository**
-   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
-   - Click "New Project"
-   - Import from GitHub: `NishanBajagain-NB/-MovieStream`
-
-2. **Configure Project**
-   - Framework Preset: Vite
-   - Root Directory: `./` (default)
+**Option A: Automatic (Recommended)**
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click "New Project"
+3. Import from GitHub: `NishanBajagain-NB/-MovieStream`
+4. Configure:
+   - Framework Preset: **Vite**
    - Build Command: `npm run build`
    - Output Directory: `dist`
    - Install Command: `npm install`
+5. Add environment variables
+6. Deploy
 
-3. **Add Environment Variables**
-   - In project settings, add the environment variables listed above
+**Option B: Vercel CLI**
+```bash
+# Install Vercel CLI
+npm i -g vercel
 
-4. **Deploy**
-   - Click "Deploy"
-   - Wait for build to complete
+# Deploy
+cd movie-streaming-app
+vercel --prod
+```
 
-### 4. Backend Connection
+### Step 3: Update CORS (Important!)
 
-The frontend is configured to connect to your backend server at:
-- **Backend URL**: `http://172.237.44.29:5000`
-- **API Endpoint**: `http://172.237.44.29:5000/api`
+After getting your Vercel URL (e.g., `https://your-app.vercel.app`):
 
-Make sure your backend server is running on the VM before testing the deployed frontend.
+```bash
+# SSH into VM
+ssh root@172.237.44.29
 
-### 5. Testing
+# Update backend environment
+cd ~/backend
+nano .env
 
-After deployment:
-1. Visit your Vercel URL
-2. Test movie browsing and search
-3. Test admin login with: `admin@nishanbajagain.com.np` / `Nishan1010@@##$$__`
-4. Verify all features work with the VM backend
+# Update this line:
+FRONTEND_URL=https://your-vercel-app.vercel.app
 
-## Troubleshooting
+# Restart backend
+pm2 restart moviestream-backend
+```
 
-### Build Errors
-- Check that all dependencies are in `package.json`
-- Verify environment variables are set correctly
+## 🔧 Production Configuration
 
-### API Connection Issues
-- Ensure backend server is running on VM
-- Check CORS settings on backend allow your Vercel domain
-- Verify firewall allows connections to port 5000
+### Backend Features
+- ✅ Production-ready CORS configuration
+- ✅ Security headers (Helmet)
+- ✅ Rate limiting
+- ✅ Request logging
+- ✅ Error handling
+- ✅ PM2 process management
+- ✅ Auto-restart on crashes
+- ✅ SSL database connection
 
-### 404 Errors
-- The `vercel.json` file handles SPA routing
-- All routes should redirect to `index.html`
+### Frontend Features
+- ✅ Optimized Vite build
+- ✅ Code splitting
+- ✅ Security headers
+- ✅ SPA routing
+- ✅ Error boundaries
+- ✅ Connection testing
+- ✅ CORS debugging tools
 
-## Production Checklist
+## 🧪 Testing Checklist
 
-- ✅ Backend deployed on VM (172.237.44.29:5000)
-- ✅ Frontend repository cleaned up
-- ✅ Environment variables configured
-- ✅ Vercel deployment configured
-- ✅ CORS settings updated for production domain
-- ✅ All sensitive data removed from repository
+### Backend Tests
+- [ ] Health check: `curl http://172.237.44.29:5000/health`
+- [ ] API endpoints: `curl http://172.237.44.29:5000/api/movies`
+- [ ] CORS headers: Check browser network tab
+- [ ] PM2 status: `pm2 status`
+- [ ] Logs: `pm2 logs moviestream-backend`
+
+### Frontend Tests
+- [ ] Homepage loads
+- [ ] Movies display correctly
+- [ ] Search functionality works
+- [ ] Admin login works
+- [ ] CORS test passes
+- [ ] Connection test passes
+
+### Full Integration Tests
+- [ ] Browse movies from frontend
+- [ ] Search movies
+- [ ] Admin panel access
+- [ ] Add/edit/delete movies
+- [ ] Ads management
+- [ ] Site settings
+
+## 🚨 Troubleshooting
+
+### Backend Issues
+```bash
+# Check if backend is running
+pm2 status
+
+# View logs
+pm2 logs moviestream-backend
+
+# Restart backend
+pm2 restart moviestream-backend
+
+# Check firewall
+sudo ufw status
+
+# Test database connection
+cd ~/backend && node -e "require('./database/connection').testConnection()"
+```
+
+### Frontend Issues
+- Check Vercel deployment logs
+- Verify environment variables
+- Test API connection with browser dev tools
+- Use CORS Test component on homepage
+
+### CORS Issues
+- Ensure FRONTEND_URL is set correctly in backend .env
+- Check browser console for CORS errors
+- Verify PM2 restarted after .env changes
+
+## 📊 Monitoring
+
+### Backend Monitoring
+```bash
+# PM2 monitoring
+pm2 monit
+
+# System resources
+htop
+
+# Disk space
+df -h
+
+# Network connections
+netstat -tulpn | grep :5000
+```
+
+### Frontend Monitoring
+- Vercel Analytics (if enabled)
+- Browser dev tools
+- Connection test component
+
+## 🔒 Security Considerations
+
+### Backend Security
+- ✅ Helmet security headers
+- ✅ Rate limiting
+- ✅ CORS configuration
+- ✅ JWT authentication
+- ✅ Input validation
+- ✅ SSL database connection
+
+### Frontend Security
+- ✅ Environment variables for sensitive data
+- ✅ No hardcoded secrets
+- ✅ Security headers via Vercel
+- ✅ HTTPS only in production
+
+## 🎯 Performance Optimization
+
+### Backend
+- ✅ Database connection pooling
+- ✅ Response compression
+- ✅ Efficient queries
+- ✅ Caching headers
+
+### Frontend
+- ✅ Code splitting
+- ✅ Lazy loading
+- ✅ Image optimization
+- ✅ Bundle optimization
+
+## 📞 Support
+
+If you encounter issues:
+1. Check the troubleshooting section
+2. Review logs (PM2 for backend, Vercel for frontend)
+3. Test individual components
+4. Verify environment variables
+
+## 🎉 Success Criteria
+
+Your deployment is successful when:
+- ✅ Backend health check returns 200
+- ✅ Frontend loads without errors
+- ✅ Movies display on homepage
+- ✅ Search functionality works
+- ✅ Admin login successful
+- ✅ CORS test passes
+- ✅ All admin features functional
