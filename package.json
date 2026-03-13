@@ -8,7 +8,7 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "vite",
     "build": "vite build",
-    "vercel-build": "npm run build",
+    "vercel-build": "vite build",
     "deploy": "node deploy-vercel.js",
     "lint": "eslint .",
     "preview": "vite preview",
