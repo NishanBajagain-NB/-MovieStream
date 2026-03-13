@@ -4,10 +4,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000, // 10 second timeout
+  timeout: 15000, // 15 second timeout
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add CORS configuration
+  withCredentials: false,
 });
 
 // Add auth token to requests
@@ -36,10 +38,17 @@ api.interceptors.response.use(
         error.code === 'ERR_NETWORK' || 
         error.code === 'ENOTFOUND' ||
         error.message.includes('Network Error') ||
+        error.message.includes('CORS') ||
         !error.response) {
       
       console.error('Network connection failed. Backend may not be running on:', API_BASE_URL);
-      throw new Error(`Cannot connect to backend server at ${API_BASE_URL}. Please ensure the backend is running on port 5000.`);
+      
+      // More specific CORS error message
+      if (error.message.includes('CORS') || error.code === 'ERR_NETWORK') {
+        throw new Error(`CORS Error: Cannot connect to backend at ${API_BASE_URL}. The backend server needs to allow cross-origin requests from your domain.`);
+      }
+      
+      throw new Error(`Cannot connect to backend server at ${API_BASE_URL}. Please ensure the backend is running and accessible.`);
     }
     
     // Timeout errors

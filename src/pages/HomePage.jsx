@@ -6,6 +6,7 @@ import MovieCard from '../components/MovieCard';
 import AdBanner from '../components/AdBanner';
 import Footer from '../components/Footer';
 import ConnectionTest from '../components/ConnectionTest';
+import CORSTest from '../components/CORSTest';
 import { movieAPI } from '../services/api';
 
 const HomePage = () => {
@@ -197,6 +198,7 @@ const HomePage = () => {
           <section className="px-4 sm:px-6 lg:px-8 mb-6">
             <div className="max-w-7xl mx-auto">
               <ConnectionTest />
+              <CORSTest />
             </div>
           </section>
         )}
